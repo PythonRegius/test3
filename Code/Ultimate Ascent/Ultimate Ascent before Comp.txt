@@ -1,0 +1,224 @@
+#include "WPILib.h"
+
+
+class RobotDemo : public SimpleRobot
+{
+	RobotDrive *drive; 
+	Joystick *controller;
+	DriverStation *ds;
+	Jaguar *climb, *shoot;
+	Victor *load;
+	Compressor *comp;
+	Solenoid *tiltUp, *tiltDown, *recieveFrisbee, *fire;
+
+public:
+	RobotDemo(void)
+	{
+		GetWatchdog().Kill(); 
+		drive = new RobotDrive(1, 2, 3, 4);
+		controller = new Joystick(1);
+		
+		climb = new Jaguar (5);
+		shoot = new Jaguar (6);
+		load = new Victor (7);
+		
+		comp = new Compressor (4, 8);
+		tiltUp = new Solenoid (3);
+		tiltDown = new Solenoid (4);
+		recieveFrisbee = new Solenoid (1);
+		fire = new Solenoid (2);
+		
+		AxisCamera &camera = AxisCamera::GetInstance("10.33.3.11");
+		camera.WriteResolution(AxisCamera::kResolution_320x240);
+		camera.WriteCompression(30);
+		camera.WriteBrightness(0);
+		
+		
+//		drive->SetInvertedMotor(RobotDrive::kFrontRightMotor, true);
+//		drive->SetInvertedMotor(RobotDrive::kRearRightMotor, true);
+//		drive->SetInvertedMotor(RobotDrive::kFrontLeftMotor, true);
+//		drive->SetInvertedMotor(RobotDrive::kRearLeftMotor, true);
+			
+	}
+	
+	void LoadFrisbee(void)
+	{
+		fire->Set(false);
+		recieveFrisbee->Set(true);
+		load->Set(-0.5);
+			Wait (0.005);
+		load->Set(0.0);
+	}
+	
+	void StartShooterMotors(void)
+	{
+		shoot->Set(true);
+	}
+	
+	void Fire(void)
+	{
+		fire->Set(true);
+		recieveFrisbee->Set(false);
+	}
+	
+	void Reset(void)
+	{
+		shoot->Set(false);
+		LoadFrisbee();
+	}
+	
+	void LoadAndShootFrisbee(void)
+	{
+		StartShooterMotors();
+		LoadFrisbee();
+		Fire();
+		Reset();
+	}
+	
+	void ShootFrisbee(void)
+	{
+		StartShooterMotors();
+		Fire();
+	}
+	
+	void ClimbReachForNextLevel(void)
+	{
+		climb->Set(-true);
+	}
+	
+	void ClimbPullUpRobot(void)
+	{
+		climb->Set(true);
+	}
+
+	void Autonomous(void)
+	{
+		GetWatchdog().Kill();
+		comp->Start();
+		
+		drive->Drive(0.0, 0.0);
+			Wait (5.0);
+		fire->Set(false);
+		recieveFrisbee->Set(true);
+		shoot->Set(true);
+			Wait (1.0);
+		fire->Set(true);           //fire one
+		recieveFrisbee->Set(false);
+			Wait (0.5);
+		fire->Set(false);
+		recieveFrisbee->Set(true);
+			Wait (1.0);
+		load->Set(-0.4);         // load one
+			Wait (0.3);
+		load->Set(false);
+			Wait (0.5);
+		fire->Set(true);           // fire two
+		recieveFrisbee->Set(false);
+			Wait (1.0);
+		fire->Set(false);
+		recieveFrisbee->Set(true);
+			Wait (1.0);
+		load->Set(-0.5);          // load two
+			Wait (0.3);
+		load->Set(false);
+			Wait (0.5);
+		fire->Set(true);           // fire three
+		recieveFrisbee->Set(false);
+			Wait (1.0);
+		fire->Set(false);
+		recieveFrisbee->Set(true);
+			Wait (1.0);
+		load->Set(-0.5);          // load three
+			Wait (0.3);
+		load->Set(false);
+			Wait (0.5);
+		fire->Set(true);           // fire four
+		recieveFrisbee->Set(false);
+			Wait (1.0);
+		fire->Set(false);
+		recieveFrisbee->Set(true);
+			Wait (1.0);
+		load->Set(-0.5);          // load four
+			Wait (0.3);
+		load->Set(false);
+			Wait (0.5);
+		fire->Set(true);           // fire five
+		recieveFrisbee->Set(false);
+			Wait (1.0);
+		fire->Set(false);
+		recieveFrisbee->Set(true);
+			Wait (1.0);
+		shoot->Set(false);
+		
+	}
+
+	void OperatorControl(void)
+	{
+		comp->Start();
+				
+		while (IsOperatorControl())
+		{
+			
+		drive->MecanumDrive_Cartesian(controller->GetZ(), controller->GetX(), controller->GetY(), 0);
+			Wait (0.005);
+					
+/*			if(controller->GetRawButton(1))  // load one Frisbee
+			{
+				LoadFrisbee();
+			}if(controller->GetRawButton(2))  // shoot one Frisbee
+			{
+				ShootFrisbee();
+			}if(controller->GetRawButton(3))  // load then fire one Frisbee, reload
+			{
+				LoadAndShootFrisbee();
+			}
+*/
+			if(controller->GetRawButton(2))
+			{
+				load->Set(-0.4);
+				
+			}else
+			{
+				load->Set(false);
+				
+			}if(controller->GetRawButton(1))
+			{
+				shoot->Set(true);
+				
+			}if(controller->GetRawButton(4))
+			{	
+				shoot->Set(false);
+				
+			}if(controller->GetRawButton(3))
+			{
+				fire->Set(true);
+				recieveFrisbee->Set(false);
+				
+			}else
+			{	
+				fire->Set(false);
+				recieveFrisbee->Set(true);
+				
+			}if(controller->GetRawButton(5))  // reach for next level of pyramid
+			{
+				ClimbReachForNextLevel();
+			}else if(controller->GetRawButton(7))  // pull robot up to next level of pyramid
+			{
+				ClimbPullUpRobot();
+			}else
+			{
+				climb->Set(0.0);
+			}if(controller->GetRawButton(6)) // tilt robot up
+			{
+				tiltUp->Set(true);
+				tiltDown->Set(false);
+			}if(controller->GetRawButton(8)) // tilt robot down
+			{
+				tiltUp->Set(false);
+				tiltDown->Set(true);
+			}
+		}
+	}
+};
+
+START_ROBOT_CLASS(RobotDemo);

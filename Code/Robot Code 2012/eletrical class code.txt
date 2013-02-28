@@ -1,0 +1,119 @@
+#include "WPILib.h"
+
+class RobotDemo : public SimpleRobot
+{
+	RobotDrive *drive;
+	Joystick *controller;
+	DriverStation *ds;
+	Solenoid *in, *out;
+	Compressor *comp;
+	Victor *rollers, *range;
+	Jaguar *shoot;
+	Servo *open1;
+	
+public:
+		RobotDemo(void)
+		{
+			GetWatchdog().Kill(); 
+			drive = new RobotDrive(1, 2);
+			controller = new Joystick(1);
+			
+			rollers = new Victor(3);
+			range = new Victor(4);
+			shoot = new Jaguar(5);
+			
+			comp = new Compressor(4, 1);
+			in = new Solenoid(1);
+			out = new Solenoid(2);
+			
+			open1 = new Servo (6);
+			open1 -> SetAngle(0);
+			
+//			drive->SetInvertedMotor(RobotDrive::kFrontLeftMotor, true);
+//  		drive->SetInvertedMotor(RobotDrive::kFrontRightMotor, true);
+			drive->SetSafetyEnabled(false);
+		}
+///*		
+		void Autonomous(void)
+		{
+			GetWatchdog().Kill();
+			drive->Drive(0.0, 0.0);
+			shoot->Set(0.9);
+			Wait (2.0);
+			rollers->Set(true);
+			Wait (9.0);
+			shoot->Set(false);
+			rollers->Set(false); 
+		}
+//*/		
+/*		
+ 	 	 void Autonomous(void)
+		{
+			GetWatchdog().Kill();
+			drive->Drive(0.0, 0.0);
+			rollers->Set(-true);
+			Wait (9.0);
+			rollers->Set(false);
+		}
+*/		
+		void OperatorControl(void)
+		{
+			comp->Start();
+			
+			while (IsOperatorControl())
+			{
+				drive->ArcadeDrive(controller->GetY(), controller->GetX());
+				Wait (0.005);
+				
+				if(controller->GetRawButton(1))
+				{
+					rollers->Set(true); // (0.5)
+				}else
+				{
+					rollers->Set(false); // (0.0)
+				}
+				if(controller->GetRawButton(2))
+				{
+					shoot->Set(true); // (0.5)
+				}else
+				{
+					shoot->Set(false); // (0.0)
+				}
+				if(controller->GetRawButton(6))
+				{
+					range->Set(.5f);
+				}else if(controller->GetRawButton(8))
+				{
+					range->Set(-.5f);
+				}else
+				{
+					range->Set(0);
+				}
+				if (controller->GetRawButton(5))
+				{
+					in->Set(true);
+					out->Set(false);
+				}else if (controller->GetRawButton(7))
+				{
+					in->Set(false);
+					out->Set(true);
+				}
+				if (controller->GetRawButton(3))
+				{
+					open1->SetAngle(90);
+				}else
+				{
+					open1->SetAngle(0);
+				}
+				if (controller->GetRawButton(4))
+				{
+					open1->SetAngle(-90);
+				}else
+				{
+					open1->SetAngle(0);
+				}
+			}
+		}
+	
+};
+START_ROBOT_CLASS(RobotDemo);

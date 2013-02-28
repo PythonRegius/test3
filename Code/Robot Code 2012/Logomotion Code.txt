@@ -1,0 +1,139 @@
+#include "WPILib.h"
+
+
+class RobotDemo : public SimpleRobot
+{
+
+	Joystick *controller; // only joystick
+	DriverStation *ds; // driver station
+	Solenoid *in, *out, *inwrist, *outwrist;
+	RobotDrive *drive;			// robot drive base object
+	DigitalInput *left;			// digital inputs for line tracking sensors
+	DigitalInput *middle;
+	DigitalInput *right;
+	Compressor *comp;
+	Victor *arm, *wrist;
+	Servo *open1;
+
+public:
+	RobotDemo(void)
+	{
+		drive = new RobotDrive(1, 2, 3, 4); // create robot drive base
+		controller = new Joystick(1);
+		
+		in = new Solenoid(8, 1);
+		out = new Solenoid(8, 2);
+		inwrist = new Solenoid(8,3);
+		outwrist = new Solenoid(8,4);
+
+		comp = new Compressor(4,1);
+		
+		arm = new Victor(6);
+		wrist = new Victor(5);
+		
+		open1 = new Servo(7);
+		open1->SetAngle(0);
+		
+		AxisCamera &camera = AxisCamera::GetInstance();
+		camera.WriteResolution(AxisCamera::kResolution_320x240);
+		camera.WriteCompression(20);
+		camera.WriteBrightness(0);
+				
+//		drive->SetInvertedMotor(RobotDrive::kFrontRightMotor, true);
+		drive->SetInvertedMotor(RobotDrive::kFrontLeftMotor, true);
+		drive->SetInvertedMotor(RobotDrive::kRearRightMotor, true);
+		drive->SetInvertedMotor(RobotDrive::kRearLeftMotor, true);
+		
+		left = new DigitalInput(1);
+		middle = new DigitalInput(2);
+		right = new DigitalInput(3);
+		
+		//left = new DigitalInput(4, 1);
+		//middle = new DigitalInput(4, 2);
+		//right = new DigitalInput(4, 3);
+		GetWatchdog().SetEnabled(false);
+		
+		
+	}
+	
+
+	void Autonomous(void)
+	{
+		comp->Start();
+		
+//		static double firstTime=9, secondTime=1.5;
+		
+	    arm->Set(-.9);
+	    wrist->Set(.9);
+	    Wait (10.4);
+	    arm->Set(0);
+	    Wait (1.4);
+	    wrist->Set(0);
+	    Wait (0.02);
+	    
+	    for (int i=0; i<100; i++)
+	    {
+		    drive->MecanumDrive_Cartesian(0.0, -0.5, 0.0);
+	    	Wait(.03);
+	    }	    
+	    drive->Drive(0.0, 0.0);
+	    
+		in->Set(false); out->Set(true);
+		Wait (0.2);
+		arm->Set(.9);
+		Wait (3.0);
+		arm->Set(0.0);
+		
+	}
+
+	
+	void OperatorControl(void)
+	{
+		comp->Start();
+		
+		while (IsOperatorControl() && IsEnabled())
+		{	
+			drive->MecanumDrive_Cartesian(controller->GetX(), controller->GetY(), controller->GetZ(), 0);
+			
+			
+			if(controller->GetRawButton(5))
+			{
+				arm->Set(-.9f);
+			}else if (controller->GetRawButton(7))
+			{
+				arm->Set(.9f);
+			}else
+			{
+				arm->Set(0);
+			}if(controller->GetRawButton(8))
+			{
+				inwrist->Set(false);
+				outwrist->Set(true);
+			}else if (controller->GetRawButton(6))
+			{
+				inwrist->Set(true);
+				outwrist->Set(false);
+			}if (controller->GetRawButton(11))
+			{
+				in->Set(true);
+				out->Set(false);
+			}else if (controller->GetRawButton(12))
+			{
+				in->Set(false);
+				out->Set(true);
+			}if(controller->GetRawButton(1))
+			{
+				open1->SetAngle(90);
+			}else
+			{
+				open1->SetAngle(0);
+			}
+
+		}
+		//comp->Stop();
+	}
+	
+};
+
+START_ROBOT_CLASS(RobotDemo);
+

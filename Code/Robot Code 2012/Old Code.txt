@@ -1,0 +1,109 @@
+#include "WPILib.h"
+
+
+class RobotDemo : public SimpleRobot
+{
+	Joystick *controller; // only joystick
+	DriverStation *ds;   // driver station
+	RobotDrive *drive;  // robot drive base object
+	Victor *belt, *tilttable;
+	Jaguar *shootleft, *shootright, *angle;
+
+public:
+	   RobotDemo(void)
+	{
+		drive = new RobotDrive(1, 2);
+		controller = new Joystick(1);
+		
+		belt = new Victor(3);
+		tilttable = new Victor(4);
+		
+		shootleft = new Jaguar(5);
+		shootright = new Jaguar(6);
+		angle = new Jaguar(7);
+		
+		AxisCamera &camera = AxisCamera::GetInstance();
+		camera.WriteResolution(AxisCamera::kResolution_320x240);
+		camera.WriteCompression(20);
+		camera.WriteBrightness(0);
+		
+//		drive->SetInvertedMotor(RobotDrive::kFrontRightMotor, true);
+//		drive->SetInvertedMotor(RobotDrive::kFrontLeftMotor, true);
+//		drive->SetInvertedMotor(RobotDrive::kRearRightMotor, true);
+//		drive->SetInvertedMotor(RobotDrive::kRearLeftMotor, true);
+	
+	}
+	void Autonomous(void)
+	{
+		drive->Drive(0.0, 0.0);
+		belt->Set(true);
+		shootleft->Set(true);
+		shootright->Set(true);
+		Wait (10.0);
+		belt->Set(false);
+		shootleft->Set(false);
+		shootright->Set(false);
+		drive->Drive(0.5, 0.0);
+		Wait (5.0);
+		drive->Drive(0.0, 0.0);
+	}
+	
+	void OperatorControl(void)
+	{
+		while (IsOperatorControl())
+		{
+			drive->Drive(controller-> GetX(), controller->GetY(), 0);
+			Wait(0.005);
+			
+			if(controller->GetRawButton(11))
+			{
+				belt->Set(true);
+				shootleft->Set(true);
+				shootright->Set(true);
+			}else if(controller->GetRawButton(12))
+			{
+				belt->Set(false);
+				shootleft->Set(false);
+				shootright->Set(false);
+			}else
+			{
+				belt->Set(false);
+				shootleft->Set(false);
+				shootright->Set(false);
+			}if(controller->GetRawButton(1))
+			{
+				belt->Set(true);
+			}else if(controller->GetRawButton(2))
+			{
+				belt->Set(false);
+			}else
+			{
+				belt->Set(false);
+			}if(controller->GetRawButton(6))
+			{
+				angle->Set(-.9f);
+			}else if(controller->GetRawButtion(8))
+			{
+				angle->Set(.9f);
+			}else
+			{
+				angle->Set(0);
+			}
+		}if(controller->GetRawButton(3))
+		{
+			tilttable->Set(.5);
+			Wait (0.005);
+			tilttable->Set(0);
+		}else if(controller->GetRawButton(4))
+		{
+			tilttable->Set(-.5);
+			Wait (0.005);
+			tilttable->Set(0);
+		}else
+		{
+			tilttable->Set(0);
+		}
+	}
+};
+
+START_ROBOT_CLASS(RobotDemo);
